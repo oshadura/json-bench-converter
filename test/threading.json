@@ -1,0 +1,88 @@
+{
+  "context": {
+    "date": "2017-07-23 17:16:16",
+    "num_cpus": 56,
+    "mhz_per_cpu": 3000,
+    "cpu_scaling_enabled": true,
+    "library_build_type": "release"
+  },
+  "benchmarks": [
+    {
+      "name": "BM_TBufferFile_FillTreeWithRandomData",
+      "iterations": 55,
+      "real_time": 16454,
+      "cpu_time": 13575,
+      "time_unit": "us"
+    },
+    {
+      "name": "BM_TBufferFile_FillTreeWithRandomData/real_time/threads:56",
+      "iterations": 392,
+      "real_time": 2354,
+      "cpu_time": 15683,
+      "time_unit": "us"
+    },
+    {
+      "name": "BM_TBufferFile_FillTreeWithRandomData/real_time/threads:1",
+      "iterations": 41,
+      "real_time": 17461,
+      "cpu_time": 14265,
+      "time_unit": "us"
+    },
+    {
+      "name": "BM_TBufferFile_FillTreeWithRandomData/real_time/threads:2",
+      "iterations": 84,
+      "real_time": 9515,
+      "cpu_time": 15062,
+      "time_unit": "us"
+    },
+    {
+      "name": "BM_TBufferFile_FillTreeWithRandomData/real_time/threads:4",
+      "iterations": 176,
+      "real_time": 4473,
+      "cpu_time": 13215,
+      "time_unit": "us"
+    },
+    {
+      "name": "BM_TBufferFile_FillTreeWithRandomData/real_time/threads:8",
+      "iterations": 248,
+      "real_time": 3315,
+      "cpu_time": 13614,
+      "time_unit": "us"
+    },
+    {
+      "name": "BM_TBufferFile_FillTreeWithRandomData/real_time/threads:16",
+      "iterations": 256,
+      "real_time": 2940,
+      "cpu_time": 14076,
+      "time_unit": "us"
+    },
+    {
+      "name": "BM_TBufferFile_FillTreeWithRandomData/real_time/threads:32",
+      "iterations": 320,
+      "real_time": 2764,
+      "cpu_time": 14559,
+      "time_unit": "us"
+    },
+    {
+      "name": "BM_TBufferFile_FillTreeWithRandomData/real_time/threads:64",
+      "iterations": 384,
+      "real_time": 1890,
+      "cpu_time": 15472,
+      "time_unit": "us"
+    },
+    {
+      "name": "BM_TBufferFile_FillTreeWithRandomData/real_time/threads:128",
+      "iterations": 384,
+      "real_time": 1626,
+      "cpu_time": 16366,
+      "time_unit": "us"
+    },
+    {
+      "name": "BM_TBufferFile_FillTreeWithRandomData/real_time/threads:256",
+      "iterations": 512,
+      "real_time": 1194,
+      "cpu_time": 16346,
+      "time_unit": "us"
+    }
+  ]
+}

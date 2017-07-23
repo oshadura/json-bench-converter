@@ -149,6 +149,22 @@ void handle_vectorize_cases(json j) {
   }
 }
 
+static std::vector<std::string> split_string(const std::string& in, char delimiter) {
+   std::vector<std::string> out;
+   std::string token = "";
+   for (size_t i = 0, e = in.size(); i < e; ++i) {
+      if (in[i] == delimiter && !token.empty()) {
+         out.push_back(token);
+         token = "";
+      }
+      else
+         token += in[i];
+   }
+   if (!token.empty())
+      out.push_back(token);
+   return out;
+}
+
 // Goes through all nodes and creates javascript files for things that look like
 // threading benchmarks.
 void handle_threading_cases(json j) {
@@ -156,8 +172,8 @@ void handle_threading_cases(json j) {
   // List of all the functions we benchmarked 
   std::map<std::string, bench_series> funcs;
 
-  std::regex thread_regex(R"regex(([A-Za-z_0-9:]+)/threads:(\d+))regex");
-  std::smatch base_match;
+  //std::regex thread_regex(R"regex(([A-Za-z_0-9:]+)\/threads:(\d+))regex");
+  //std::smatch base_match;
 
   // Build up our data structure "funcs"
   for(auto& b : j["benchmarks"]) {
@@ -168,14 +184,21 @@ void handle_threading_cases(json j) {
     std::string func;
     long threads;
     
-    if (!std::regex_match(name, base_match, thread_regex)) {
+    // BM_TBufferFile_FillTreeWithRandomData/real_time/threads:56
+    std::vector<std::string> base_match = split_string(name, '/');
+    if (!base_match.size()) {
       std::cerr << "couldnt match name for thread regex: " << name << std::endl;
       continue;
     }
 
     if (base_match.size() == 3) {
-      func = base_match[1].str();
-      threads = std::atol(base_match[2].str().c_str());
+      // Split the thread count
+      auto thread_and_count = base_match[base_match.size()-1];
+      base_match.push_back(split_string(thread_and_count, ':')[1]);
+      split_string(base_match[base_match.size()-1], ':');
+
+      func = base_match[1];
+      threads = std::atol(base_match[base_match.size()-1].c_str());
       auto & series = funcs[func];
       series.mean_run_by_input_size[threads] = bench_run(real_time, cpu_time);
     } else {
