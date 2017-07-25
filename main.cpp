@@ -97,6 +97,12 @@ bool handle_vectorize_cases(json j) {
           assert(0 && "Unreachable");
       }
     }
+
+    auto & series = funcs[func].series_by_template_type[template_arg];
+    if (is_mean) {
+      series.mean_run_by_input_size[input_size] = bench_run(real_time, cpu_time);
+    } else if (is_stddev) {
+      series.stddev_run_by_input_size[input_size] = bench_run(real_time, cpu_time);
     } else {
       assert(false);
     }
@@ -125,7 +131,7 @@ bool handle_vectorize_cases(json j) {
     
     json series_list = json::array();
     
-    std::vector<std::string> time_kinds = {"real", "CPU"};
+    std::vector<std::string> time_kinds = {"real"/*, "CPU"*/};
     // We want one data row for real and one for CPU time.
     // The strings are taken to lookup in the map of bench_run.
     for (std::string time_kind : time_kinds) {
@@ -253,7 +259,8 @@ bool handle_threading_cases(json j) {
         }},
       };
       for (auto& run : func_pair.second.mean_run_by_input_size) {
-        mean_run["data"] += run.second.times[time_kind];
+        // We want to have [thread_size, time] so that we get the axis range right.
+        mean_run["data"] += json::array({run.first, run.second.times[time_kind]});
       }
       series_list += mean_run;
     }
