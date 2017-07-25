@@ -49,7 +49,7 @@ static std::vector<std::string> split_string(const std::string& in, char delimit
 }
 
 // Goes through all nodes and creates javascript files for stuff that looks like vectorized code
-void handle_vectorize_cases(json j) {
+bool handle_vectorize_cases(json j) {
   
   // List of all the functions we benchmarked 
   std::map<std::string, bench_func> funcs;
@@ -151,48 +151,32 @@ void handle_vectorize_cases(json j) {
           {"whiskerLength", 0}
         };
         for (auto& run : series.second.mean_run_by_input_size) {
-          mean_run["data"] += run.second.times[time_kind];
+          // We want to have [input_size, time] so that we get the axis range right.
+          mean_run["data"] += json::array({run.first, run.second.times[time_kind]});
         }
         for (auto& run : series.second.stddev_run_by_input_size) {
           // The stddev is relative, so we have to get the mean time and then add/substract
           // our stddev time
           auto mean_time = series.second.mean_run_by_input_size[run.first].times[time_kind];
           auto stddev_time = run.second.times[time_kind];
-          stddev_run["data"] += json::array({mean_time - stddev_time, mean_time + stddev_time});
+          // We want to have [input_size, min, max] so that we get the axis range right.
+          stddev_run["data"] += json::array({run.first, mean_time - stddev_time, mean_time + stddev_time});
         }
         series_list += mean_run;
         series_list += stddev_run;
       }
     }
     output["series"] = series_list;
-    
-    //std::cout << output.dump(1) << std::endl;
-    // write prettified JSON to another file
-    std::ofstream o(function_name + ".vec.js");
-    o << "Highcharts.chart('container', ";
-    o << std::setw(1) << output << ");\n";
-  }
-}
 
-static std::vector<std::string> split_string(const std::string& in, char delimiter) {
-   std::vector<std::string> out;
-   std::string token = "";
-   for (size_t i = 0, e = in.size(); i < e; ++i) {
-      if (in[i] == delimiter && !token.empty()) {
-         out.push_back(token);
-         token = "";
-      }
-      else
-         token += in[i];
-   }
-   if (!token.empty())
-      out.push_back(token);
-   return out;
+    std::cout << "Highcharts.chart('container', ";
+    std::cout << std::setw(1) << output << ");\n";
+  }
+  return true;
 }
 
 // Goes through all nodes and creates javascript files for things that look like
 // threading benchmarks.
-void handle_threading_cases(json j) {
+bool handle_threading_cases(json j) {
   
   // List of all the functions we benchmarked 
   std::map<std::string, bench_series> funcs;
@@ -274,15 +258,13 @@ void handle_threading_cases(json j) {
       series_list += mean_run;
     }
     output["series"] = series_list;
-    
-    //std::cout << output.dump(1) << std::endl;
-    // Write the whole thing to a javascript file.
-    std::ofstream o(func_name + ".thread.js");
+
     // Write the 'output' json object to this file with some
     // code around that makes it valid javascript.
-    o << "Highcharts.chart('container', ";
-    o << std::setw(1) << output << ");\n";
+    std::cout << "Highcharts.chart('container', ";
+    std::cout << std::setw(1) << output << ");\n";
   }
+  return true;
 }
 
 int main(int argc, char** argv) {
@@ -296,7 +278,5 @@ int main(int argc, char** argv) {
   json j;
   i >> j;
   // Create vectorize/threading JavaScript files
-  handle_vectorize_cases(j);
-  handle_threading_cases(j);
-
+  return handle_vectorize_cases(j) || handle_threading_cases(j);
 }
