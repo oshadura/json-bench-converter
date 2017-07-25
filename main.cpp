@@ -32,15 +32,31 @@ struct bench_func {
   std::map<std::string, bench_series> series_by_template_type;
 };
 
+static std::vector<std::string> split_string(const std::string& in, char delimiter) {
+   std::vector<std::string> out;
+   std::string token = "";
+   for (size_t i = 0, e = in.size(); i < e; ++i) {
+      if (in[i] == delimiter && !token.empty()) {
+         out.push_back(token);
+         token = "";
+      }
+      else
+         token += in[i];
+   }
+   if (!token.empty())
+      out.push_back(token);
+   return out;
+}
+
 // Goes through all nodes and creates javascript files for stuff that looks like vectorized code
 void handle_vectorize_cases(json j) {
   
   // List of all the functions we benchmarked 
   std::map<std::string, bench_func> funcs;
 
-  std::regex mean_regex(R"regex(([A-Za-z_0-9:]+)[<]([A-Za-z_0-9:]+)[>]/(\d+)_mean)regex");
-  std::regex stddev_regex(R"regex(([A-Za-z_0-9:]+)[<]([A-Za-z_0-9:]+)[>]/(\d+)_stddev)regex");
-  std::smatch base_match;
+  //std::regex mean_regex(R"regex(([A-Za-z_0-9:]+)[<]([A-Za-z_0-9:]+)[>]/(\d+)_mean)regex");
+  //std::regex stddev_regex(R"regex(([A-Za-z_0-9:]+)[<]([A-Za-z_0-9:]+)[>]/(\d+)_stddev)regex");
+  //std::smatch base_match;
 
   for(auto& b : j["benchmarks"]) {
     std::string name = b["name"];
@@ -48,32 +64,41 @@ void handle_vectorize_cases(json j) {
     long cpu_time = b["cpu_time"];
     std::string template_arg;
     std::string func;
-    long input_size;
+    long input_size = 0;
     bool is_mean = false;
     bool is_stddev = false;
-    if (std::regex_match(name, base_match, mean_regex)) {
-      is_mean = true;
-    } else if (std::regex_match(name, base_match, stddev_regex)) {
-      is_stddev = true;
-    } else {
-      std::cerr << "couldnt match name for vec regex: " << name << std::endl;
-      continue;
-    }
 
-    if (base_match.size() == 4) {
-      func = base_match[1].str();
-      template_arg = base_match[2].str();
-      input_size = std::atol(base_match[3].str().c_str());
-      auto & series = funcs[func].series_by_template_type[template_arg];
-      if (is_mean) {
-        series.mean_run_by_input_size[input_size] = bench_run(real_time, cpu_time);
-      } else if (is_stddev) {
-        series.stddev_run_by_input_size[input_size] = bench_run(real_time, cpu_time);
-      } else {
-        assert(false);
+    for (size_t i = 0, e = name.size(); i < e; ++i) {
+      while (isalnum(name[i]) || name[i] == '_') {
+        func += name[i++];
       }
+      if (name[i++] == '<') {
+        while (name[i] != '>')
+          template_arg += name[i++];
+        // Consume >
+        ++i;
+      }
+      assert(name[i] == '/' && "Broken input");
+      if (isdigit(name[++i])) { // consume '/'
+        input_size = atoi(&name[i]);
+        while (isdigit(name[i++]));
+        --i; // back up one to get to the _
+      }
+      if (name[i] == '_') {
+        ++i; // skip '_'
+        std::string mean_or_stddev = "";
+        while(i < e)
+          mean_or_stddev += name[i++];
+        if (mean_or_stddev == "mean")
+          is_mean = true;
+        else if (mean_or_stddev == "stddev")
+          is_stddev = true;
+        else
+          assert(0 && "Unreachable");
+      }
+    }
     } else {
-      std::cerr << "not enough results in match?" << std::endl;
+      assert(false);
     }
   }
 
